@@ -17,7 +17,7 @@ endif()
 #
 # install the tiny-process-library
 #
-find_package(Threads REQUIRED QUIET)
+find_package(Threads REQUIRED)
 
 # create a target here instead of using the one provided
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/tpl)
