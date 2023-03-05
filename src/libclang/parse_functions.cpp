@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include "parse_functions.hpp"
 
@@ -108,7 +107,8 @@ bool is_friend(const CXCursor& parent_cur)
 
 std::unique_ptr<cpp_entity> detail::parse_entity(const detail::parse_context& context,
                                                  cpp_entity* parent, const CXCursor& cur,
-                                                 const CXCursor& parent_cur) try
+                                                 const CXCursor& parent_cur)
+try
 {
     if (context.logger->is_verbose())
     {
@@ -119,11 +119,13 @@ std::unique_ptr<cpp_entity> detail::parse_entity(const detail::parse_context& co
     }
 
     auto kind = clang_getCursorKind(cur);
-    switch (kind)
+    switch (int(kind))
     {
     case CXCursor_UnexposedDecl:
         // go through all the try_parse_XXX functions
         if (auto entity = try_parse_cpp_language_linkage(context, cur))
+            return entity;
+        if (auto entity = try_parse_cpp_concept(context, cur))
             return entity;
         break;
 
@@ -198,6 +200,8 @@ std::unique_ptr<cpp_entity> detail::parse_entity(const detail::parse_context& co
 
     case CXCursor_StaticAssert:
         return parse_cpp_static_assert(context, cur);
+    case CXCursor_ConceptDecl:
+        return try_parse_cpp_concept(context, cur);
 
     default:
         break;
@@ -208,7 +212,7 @@ std::unique_ptr<cpp_entity> detail::parse_entity(const detail::parse_context& co
         // build unexposed entity
         detail::cxtokenizer    tokenizer(context.tu, context.file, cur);
         detail::cxtoken_stream stream(tokenizer, cur);
-        auto                   spelling = detail::to_string(stream, stream.end());
+        auto                   spelling = detail::to_string(stream, stream.end(), false);
         if (spelling.begin() + 1 == spelling.end() && spelling.front().spelling == ";")
             // unnecessary semicolon
             return nullptr;

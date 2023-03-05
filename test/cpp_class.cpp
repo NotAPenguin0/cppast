@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_class.hpp>
 
@@ -85,6 +84,13 @@ struct f
 : public ns::base, virtual protected e
 {};
 
+/// struct f2
+/// :ns::base,virtual protected e{
+/// };
+struct f2
+: public ns::base, protected virtual e
+{};
+
 using namespace ns;
 
 /// struct g
@@ -164,7 +170,7 @@ struct g
                     REQUIRE(child.name() == "public");
                     REQUIRE(child.kind() == cpp_entity_kind::access_specifier_t);
                     REQUIRE(static_cast<const cpp_access_specifier&>(child).access_specifier()
-                            == cpp_public);
+                                        == cpp_public);
                     break;
                 case 2:
                     REQUIRE(child.name() == "m2");
@@ -173,13 +179,13 @@ struct g
                     REQUIRE(child.name() == "private");
                     REQUIRE(child.kind() == cpp_entity_kind::access_specifier_t);
                     REQUIRE(static_cast<const cpp_access_specifier&>(child).access_specifier()
-                            == cpp_private);
+                                        == cpp_private);
                     break;
                 case 4:
                     REQUIRE(child.name() == "private");
                     REQUIRE(child.kind() == cpp_entity_kind::access_specifier_t);
                     REQUIRE(static_cast<const cpp_access_specifier&>(child).access_specifier()
-                            == cpp_private);
+                                        == cpp_private);
                     break;
                 case 5:
                     REQUIRE(child.name() == "m3");
@@ -188,7 +194,7 @@ struct g
                     REQUIRE(child.name() == "protected");
                     REQUIRE(child.kind() == cpp_entity_kind::access_specifier_t);
                     REQUIRE(static_cast<const cpp_access_specifier&>(child).access_specifier()
-                            == cpp_protected);
+                                        == cpp_protected);
                     break;
                 case 7:
                     REQUIRE(child.name() == "m4");
@@ -218,7 +224,7 @@ struct g
                     REQUIRE(!base.is_virtual());
 
                     REQUIRE(equal_types(idx, base.type(),
-                                        *cpp_user_defined_type::build(
+                                                    *cpp_user_defined_type::build(
                                             cpp_type_ref(cpp_entity_id(""), "a"))));
                 }
                 else if (base.name() == "d")
@@ -227,7 +233,7 @@ struct g
                     REQUIRE(!base.is_virtual());
 
                     REQUIRE(equal_types(idx, base.type(),
-                                        *cpp_user_defined_type::build(
+                                                    *cpp_user_defined_type::build(
                                             cpp_type_ref(cpp_entity_id(""), "d"))));
                 }
                 else
@@ -235,7 +241,7 @@ struct g
             }
             REQUIRE(no_bases == 2u);
         }
-        else if (c.name() == "f")
+        else if (c.name() == "f" || c.name() == "f2")
         {
             REQUIRE(c.is_definition());
             REQUIRE(!c.is_declaration());
@@ -253,7 +259,7 @@ struct g
                     REQUIRE(!base.is_virtual());
 
                     REQUIRE(equal_types(idx, base.type(),
-                                        *cpp_user_defined_type::build(
+                                                    *cpp_user_defined_type::build(
                                             cpp_type_ref(cpp_entity_id(""), "ns::base"))));
                 }
                 else if (base.name() == "e")
@@ -262,7 +268,7 @@ struct g
                     REQUIRE(base.is_virtual());
 
                     REQUIRE(equal_types(idx, base.type(),
-                                        *cpp_user_defined_type::build(
+                                                    *cpp_user_defined_type::build(
                                             cpp_type_ref(cpp_entity_id(""), "e"))));
                 }
                 else
@@ -288,7 +294,7 @@ struct g
                     REQUIRE(!base.is_virtual());
 
                     REQUIRE(equal_types(idx, base.type(),
-                                        *cpp_user_defined_type::build(
+                                                    *cpp_user_defined_type::build(
                                             cpp_type_ref(cpp_entity_id(""), "ns::base"))));
                 }
                 else
@@ -299,5 +305,5 @@ struct g
         else
             REQUIRE(false);
     });
-    REQUIRE(count == 12u);
+    REQUIRE(count == 13u);
 }

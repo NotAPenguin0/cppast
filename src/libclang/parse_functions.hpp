@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_PARSE_FUNCTIONS_HPP_INCLUDED
 #define CPPAST_PARSE_FUNCTIONS_HPP_INCLUDED
@@ -63,6 +62,8 @@ namespace detail
                                                         const parse_context& context,
                                                         const CXCursor& cur, const char* name);
 
+    type_safe::optional<cpp_entity_ref> get_semantic_parent(const CXCursor& cur, bool is_friend);
+
     std::unique_ptr<cpp_type> parse_type(const parse_context& context, const CXCursor& cur,
                                          const CXType& type);
 
@@ -92,6 +93,22 @@ namespace detail
     // unexposed
     std::unique_ptr<cpp_entity> try_parse_cpp_language_linkage(const parse_context& context,
                                                                const CXCursor&      cur);
+
+    // If the version is < 62, CXCursor_ConceptDecl does not exist.
+    // If the version is > 62, CXCursor_ConceptDecl does exist.
+    // If the version == 62, it may or may not exist. :(
+    // As such, manually define it to the corresponding number.
+    constexpr auto libclang_definitely_has_concept_support = CINDEX_VERSION_MINOR > 62;
+#if CINDEX_VERSION_MINOR > 62
+    constexpr auto CXCursor_ConceptDecl = ::CXCursor_ConceptDecl;
+#else
+    constexpr auto CXCursor_ConceptDecl = CXCursorKind(604);
+#endif
+
+    // unexposed, ConceptDecl
+    std::unique_ptr<cpp_entity> try_parse_cpp_concept(const parse_context& context,
+                                                      const CXCursor&      cur);
+
     // CXXMethod
     std::unique_ptr<cpp_entity> try_parse_static_cpp_function(const parse_context& context,
                                                               const CXCursor&      cur);

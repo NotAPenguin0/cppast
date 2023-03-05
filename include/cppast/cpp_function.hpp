@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_CPP_FUNCTION_HPP_INCLUDED
 #define CPPAST_CPP_FUNCTION_HPP_INCLUDED
@@ -42,7 +41,7 @@ private:
 };
 
 /// The kinds of function bodies of a [cppast::cpp_function_base]().
-enum cpp_function_body_kind
+enum cpp_function_body_kind : int
 {
     cpp_function_declaration, //< Just a declaration.
     cpp_function_definition,  //< Regular definition.

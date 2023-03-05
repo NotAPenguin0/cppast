@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_forward_declarable.hpp>
 
@@ -57,6 +56,7 @@ type_safe::optional_ref<const cpp_forward_declarable> get_declarable(const cpp_e
     case cpp_entity_kind::template_type_parameter_t:
     case cpp_entity_kind::non_type_template_parameter_t:
     case cpp_entity_kind::template_template_parameter_t:
+    case cpp_entity_kind::concept_t:
     case cpp_entity_kind::alias_template_t:
     case cpp_entity_kind::variable_template_t:
     case cpp_entity_kind::static_assert_t:

@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <iostream>
 
@@ -186,7 +185,8 @@ std::unique_ptr<cppast::cpp_file> parse_file(const cppast::libclang_compile_conf
     return file;
 }
 
-int main(int argc, char* argv[]) try
+int main(int argc, char* argv[])
+try
 {
     cxxopts::Options option_list("cppast",
                                  "cppast - The commandline interface to the cppast library.\n");
@@ -227,7 +227,6 @@ int main(int argc, char* argv[]) try
     else if (options.count("version"))
     {
         std::cout << "cppast version " << CPPAST_VERSION_STRING << "\n";
-        std::cout << "Copyright (C) Jonathan Müller 2017-2019 <jonathanmueller.dev@gmail.com>\n";
         std::cout << '\n';
         std::cout << "Using libclang version " << CPPAST_CLANG_VERSION_STRING << '\n';
     }
@@ -310,6 +309,8 @@ int main(int argc, char* argv[]) try
             config.set_flags(cppast::cpp_standard::cpp_2a, flags);
         else if (options["std"].as<std::string>() == "c++20")
             config.set_flags(cppast::cpp_standard::cpp_20, flags);
+        else if (options["std"].as<std::string>() == "c++2b")
+            config.set_flags(cppast::cpp_standard::cpp_2b, flags);
         else
         {
             print_error("invalid value '" + options["std"].as<std::string>() + "' for std flag");

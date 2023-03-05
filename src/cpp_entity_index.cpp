@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_entity_index.hpp>
 
@@ -26,7 +25,8 @@ void cpp_entity_index::register_definition(cpp_entity_id                        
     {
         // already in map, override declaration
         auto& value = result.first->second;
-        if (value.is_definition && !is_template(value.entity->kind()))
+        if (value.is_definition && !is_template(value.entity->kind()) && entity->parent()
+            && !is_template(entity->parent().value().kind()))
             // allow duplicate definition of templates
             // this handles things such as SFINAE
             throw duplicate_definition_error();

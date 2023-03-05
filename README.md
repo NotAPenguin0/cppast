@@ -2,11 +2,6 @@
 
 Library interface to the C++ AST &mdash; parse source files, synthesize entities, get documentation comments and generate code.
 
-> |[![](https://www.jonathanmueller.dev/embarcadero-logo.png)](https://www.embarcadero.com/de/products/cbuilder/starter) | Sponsored by [Embarcadero C++Builder](https://www.embarcadero.com/de/products/cbuilder/starter). |
-> |-------------------------------------|----------------|
->
-> If you like this project, consider [supporting me](https://jonathanmueller.dev/support-me/).
-
 ## Motivation
 
 If you're writing a tool that needs access to the C++ AST (i.e. documentation generator, reflection library, …), your only option apart from writing your own parser is to use [clang](https://clang.llvm.org).
@@ -68,7 +63,7 @@ For that set the option `LLVM_VERSION_EXPLICIT` to the version you're using,
 `LIBCLANG_INCLUDE_DIR` to the directory where the header files are located (so they can be included with `clang-c/Index.h`),
 and `CLANG_BINARY` to the full path of the `clang++` exectuable.
 
-The other dependencies like [type_safe](http://type_safe.foonathan.net) are installed automatically with git submodules, if they're not installed already.
+The other dependencies like [type_safe](http://type_safe.foonathan.net) are installed automatically with FetchContent, if they're not installed already.
 
 If you run into any issues with the installation, please report them.
 

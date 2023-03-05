@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_CPP_ENTITY_HPP_INCLUDED
 #define CPPAST_CPP_ENTITY_HPP_INCLUDED
@@ -16,12 +15,6 @@
 
 namespace cppast
 {
-class cpp_entity;
-enum class cpp_entity_kind;
-class cpp_entity_index;
-struct cpp_entity_id;
-class cpp_template_parameter;
-class cpp_template;
 
 /// The name of a scope.
 ///
@@ -54,7 +47,7 @@ private:
 class cpp_entity : detail::intrusive_list_node<cpp_entity>
 {
 public:
-    cpp_entity(const cpp_entity&) = delete;
+    cpp_entity(const cpp_entity&)            = delete;
     cpp_entity& operator=(const cpp_entity&) = delete;
 
     virtual ~cpp_entity() noexcept = default;
@@ -157,7 +150,7 @@ public:
     {
         user_data_ = data;
     }
-    
+
     /// \effects Creates it giving it the the name.
     cpp_entity(std::string name) : name_(std::move(name)), user_data_(nullptr) {}
 

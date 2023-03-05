@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_CPP_TOKEN_HPP_INCLUDED
 #define CPPAST_CPP_TOKEN_HPP_INCLUDED
@@ -9,6 +8,8 @@
 #include <vector>
 
 #include <type_safe/reference.hpp>
+
+#include <cppast/cppast_fwd.hpp>
 
 namespace cppast
 {

@@ -1,12 +1,12 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/code_generator.hpp>
 
 #include <cppast/cpp_alias_template.hpp>
 #include <cppast/cpp_class.hpp>
 #include <cppast/cpp_class_template.hpp>
+#include <cppast/cpp_concept.hpp>
 #include <cppast/cpp_entity_kind.hpp>
 #include <cppast/cpp_enum.hpp>
 #include <cppast/cpp_file.hpp>
@@ -292,11 +292,10 @@ bool generate_enum(code_generator& generator, const cpp_enum& e,
             output << opening_brace;
             output.indent();
 
-            auto need_sep = write_container(output, e,
-                                            [](const code_generator::output& out) {
-                                                out << punctuation(",") << newl;
-                                            },
-                                            cur_access);
+            auto need_sep = write_container(
+                output, e,
+                [](const code_generator::output& out) { out << punctuation(",") << newl; },
+                cur_access);
             if (need_sep)
                 output << newl;
 
@@ -881,7 +880,10 @@ bool generate_template_type_parameter(code_generator&                    generat
     code_generator::output output(type_safe::ref(generator), type_safe::ref(param), cur_access);
     if (output)
     {
-        output << keyword(to_string(param.keyword()));
+        if (param.keyword() == cpp_template_keyword::concept_contraint)
+            detail::write_token_string(output, param.concept_constraint().value());
+        else
+            output << keyword(to_string(param.keyword()));
         if (param.is_variadic())
             output << operator_ws << punctuation("...");
         if (!param.name().empty())
@@ -1038,6 +1040,23 @@ bool generate_class_template_specialization(code_generator&                     
     return static_cast<bool>(output);
 }
 
+bool generate_concept(code_generator& generator, const cpp_concept& con,
+                      cpp_access_specifier_kind cur_access)
+{
+    code_generator::output output(type_safe::ref(generator), type_safe::ref(con), cur_access);
+    if (output)
+    {
+        output << keyword("template") << operator_ws << punctuation("<") << bracket_ws;
+        detail::write_token_string(output, con.parameters());
+        output << bracket_ws << punctuation(">") << newl;
+        output << keyword("concept") << operator_ws << identifier(con.name()) << operator_ws
+               << punctuation("=") << operator_ws;
+        detail::write_expression(output, con.constraint_expression());
+        output << operator_ws << punctuation(";") << newl;
+    }
+    return static_cast<bool>(output);
+}
+
 bool generate_static_assert(code_generator& generator, const cpp_static_assert& assert,
                             cpp_access_specifier_kind cur_access)
 {
@@ -1117,6 +1136,7 @@ bool generate_code_impl(code_generator& generator, const cpp_entity& e,
         CPPAST_DETAIL_HANDLE(function_template_specialization)
         CPPAST_DETAIL_HANDLE(class_template)
         CPPAST_DETAIL_HANDLE(class_template_specialization)
+        CPPAST_DETAIL_HANDLE(concept)
 
         CPPAST_DETAIL_HANDLE(static_assert)
 

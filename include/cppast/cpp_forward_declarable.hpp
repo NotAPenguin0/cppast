@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_CPP_FORWARD_DECLARABLE_HPP_INCLUDED
 #define CPPAST_CPP_FORWARD_DECLARABLE_HPP_INCLUDED
@@ -85,11 +84,6 @@ private:
 
 /// \returns Whether or not the given entity is a definition.
 bool is_definition(const cpp_entity& e) noexcept;
-
-class cpp_enum;
-class cpp_class;
-class cpp_variable;
-class cpp_function_base;
 
 /// Gets the definition of an entity.
 /// \returns A [ts::optional_ref]() to the entity that is the definition.

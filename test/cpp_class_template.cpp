@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_class_template.hpp>
 
@@ -73,6 +72,13 @@ struct e
 /// };
 template <>
 class a<int> {};
+
+// full specialization with munch
+/// template<>
+/// class a<a<int>>{
+/// };
+template <>
+class a<a<int>> {};
 
 /// template<>
 /// struct b<0,int>{
@@ -246,7 +252,10 @@ template class a<int>;
             if (templ.is_full_specialization())
             {
                 check_template_parameters(templ, {});
-                REQUIRE(templ.unexposed_arguments().as_string() == "int");
+
+                auto args = templ.unexposed_arguments().as_string();
+                if (args != "int" && args != "a<int>")
+                    FAIL("invalid args for specialization");
             }
             else
             {
@@ -274,5 +283,5 @@ template class a<int>;
         else
             REQUIRE(false);
     });
-    REQUIRE(count == 6u);
+    REQUIRE(count == 7u);
 }

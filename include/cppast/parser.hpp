@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_PARSER_HPP_INCLUDED
 #define CPPAST_PARSER_HPP_INCLUDED
@@ -15,7 +14,6 @@
 
 namespace cppast
 {
-class cpp_entity_index;
 
 /// Base class for a parser.
 ///
@@ -27,7 +25,7 @@ class cpp_entity_index;
 class parser
 {
 public:
-    parser(const parser&) = delete;
+    parser(const parser&)            = delete;
     parser& operator=(const parser&) = delete;
 
     virtual ~parser() noexcept = default;
@@ -81,7 +79,8 @@ private:
     /// \returns The [cppast::cpp_file]() object describing it.
     /// \requires The function must be thread safe.
     virtual std::unique_ptr<cpp_file> do_parse(const cpp_entity_index& idx, std::string path,
-                                               const compile_config& config) const = 0;
+                                               const compile_config& config) const
+        = 0;
 
     type_safe::object_ref<const diagnostic_logger> logger_;
     mutable std::atomic<bool>                      error_;

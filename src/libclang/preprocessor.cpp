@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include "preprocessor.hpp"
 
@@ -64,7 +63,10 @@ source_location parse_source_location(const char*& ptr)
     DEBUG_ASSERT(*ptr == ':', detail::assert_handler{});
     ++ptr;
 
-    return {type_safe::nullopt, std::move(filename), std::move(line), type_safe::nullopt};
+    return {type_safe::nullopt,
+            filename == "<scratch space>" ? type_safe::optional<std::string>()
+                                          : std::move(filename),
+            std::move(line), type_safe::nullopt};
 }
 
 severity parse_severity(const char*& ptr)
@@ -82,6 +84,8 @@ severity parse_severity(const char*& ptr)
         return severity::error;
     else if (sev == "fatal error")
         return severity::critical;
+    else if (sev == "note")
+        return severity::info;
     else
         ptr = fallback;
     return severity::error;
@@ -103,6 +107,10 @@ void log_diagnostic(const diagnostic_logger& logger, const std::string& msg)
     std::string message;
     while (*ptr && *ptr != '\n')
         message.push_back(*ptr++);
+
+    if (!loc.file && message == "expanded from here")
+        // Useless info.
+        return;
 
     logger.log("preprocessor", diagnostic{std::move(message), std::move(loc), sev});
 }
@@ -166,11 +174,12 @@ std::string diagnostics_flags()
 // get the command that returns all macros defined in the TU
 std::string get_macro_command(const libclang_compile_config& c, const char* full_path)
 {
-    // -x c++: force C++ as input language
+    // -xc/-xc++: force C or C++ as input language
     // -I.: add current working directory to include search path
     // -E: print preprocessor output
     // -dM: print macro definitions instead of preprocessed file
-    auto flags = std::string("-x c++ -I. -E -dM");
+    std::string language = c.use_c() ? "-xc" : "-xc++";
+    auto        flags    = language + " -I. -E -dM";
     flags += diagnostics_flags();
 
     std::string cmd(detail::libclang_compile_config_access::clang_binary(c) + " " + std::move(flags)
@@ -190,10 +199,11 @@ std::string get_macro_command(const libclang_compile_config& c, const char* full
 std::string get_preprocess_command(const libclang_compile_config& c, const char* full_path,
                                    const char* macro_file_path)
 {
-    // -x c++: force C++ as input language
+    // -xc/-xc++: force C or C++ as input language
     // -E: print preprocessor output
     // -dD: keep macros
-    auto flags = std::string("-x c++ -E -dD");
+    std::string language = c.use_c() ? "-xc" : "-xc++";
+    auto        flags    = language + " -E -dD";
 
     // -CC: keep comments, even in macro
     // -C: keep comments, but not in macro
@@ -373,11 +383,9 @@ std::string write_macro_file(const libclang_compile_config& c, const std::string
     std::ofstream stream(file);
 
     auto         cmd = get_macro_command(c, full_path.c_str());
-    tpl::Process process(cmd, "",
-                         [&](const char* str, std::size_t n) {
-                             stream.write(str, std::streamsize(n));
-                         },
-                         diagnostic_logger);
+    tpl::Process process(
+        cmd, "", [&](const char* str, std::size_t n) { stream.write(str, std::streamsize(n)); },
+        diagnostic_logger);
 
     if (auto include_guard = get_include_guard_macro(full_path))
         // undefine include guard
@@ -435,15 +443,16 @@ clang_preprocess_result clang_preprocess_impl(const libclang_compile_config& c,
     };
 
     auto         cmd = get_preprocess_command(c, full_path.c_str(), macro_path);
-    tpl::Process process(cmd, "",
-                         [&](const char* str, std::size_t n) {
-                             for (auto ptr = str; ptr != str + n; ++ptr)
-                                 if (*ptr == '\t')
-                                     result.file += ' '; // convert to single spaces
-                                 else if (*ptr != '\r')
-                                     result.file += *ptr;
-                         },
-                         diagnostic_handler);
+    tpl::Process process(
+        cmd, "",
+        [&](const char* str, std::size_t n) {
+            for (auto ptr = str; ptr != str + n; ++ptr)
+                if (*ptr == '\t')
+                    result.file += ' '; // convert to single spaces
+                else if (*ptr != '\r')
+                    result.file += *ptr;
+        },
+        diagnostic_handler);
     // wait for process end
     auto exit_code = process.get_exit_status();
     DEBUG_ASSERT(diagnostic.empty(), detail::assert_handler{});
@@ -498,12 +507,20 @@ class position
 {
 public:
     position(ts::object_ref<std::string> result, const char* ptr) noexcept
-    : result_(result), cur_line_(1u), cur_column_(0u), ptr_(ptr), write_(true)
-    {}
+    : result_(result), cur_line_(1u), cur_column_(0u), ptr_(ptr), write_disabled_count_(0)
+    {
+        // We strip all conditional defines and pragmas from the input, which includes the include
+        // guard. If the source includes a file, which includes itself again (for some reason), this
+        // leads to a duplicate include, as we no longer have an include guard. So we manually add
+        // one.
+        *result += "#pragma once\n";
+        // We also need to reset the line afterwards to ensure comments still match.
+        *result += "#line 1\n";
+    }
 
     void set_line(unsigned line)
     {
-        if (cur_line_ != line)
+        if (write_enabled() && cur_line_ != line)
         {
             *result_ += "#line " + std::to_string(line) + "\n";
             cur_line_   = line;
@@ -513,8 +530,9 @@ public:
 
     void write_str(std::string str)
     {
-        if (write_ == false)
+        if (!write_enabled())
             return;
+
         for (auto c : str)
         {
             *result_ += c;
@@ -530,7 +548,7 @@ public:
 
     void bump() noexcept
     {
-        if (write_ == true)
+        if (write_enabled())
         {
             result_->push_back(*ptr_);
             ++cur_column_;
@@ -546,13 +564,15 @@ public:
 
     void bump(std::size_t offset) noexcept
     {
-        if (write_ == true)
+        if (write_enabled())
         {
             for (std::size_t i = 0u; i != offset; ++i)
                 bump();
         }
         else
+        {
             skip(offset);
+        }
     }
 
     // no write, no newline detection
@@ -563,7 +583,7 @@ public:
 
     void skip_with_linecount() noexcept
     {
-        if (write_ == true)
+        if (write_enabled())
         {
             ++cur_column_;
             if (*ptr_ == '\n')
@@ -579,17 +599,18 @@ public:
 
     void enable_write() noexcept
     {
-        write_.set();
+        DEBUG_ASSERT(write_disabled_count_ > 0, detail::assert_handler{});
+        --write_disabled_count_;
     }
 
     void disable_write() noexcept
     {
-        write_.try_reset();
+        ++write_disabled_count_;
     }
 
     bool write_enabled() const noexcept
     {
-        return write_ == true;
+        return write_disabled_count_ == 0;
     }
 
     explicit operator bool() const noexcept
@@ -621,7 +642,7 @@ private:
     ts::object_ref<std::string> result_;
     unsigned                    cur_line_, cur_column_;
     const char*                 ptr_;
-    ts::flag                    write_;
+    unsigned                    write_disabled_count_;
 };
 
 bool starts_with(const position& p, const char* str, std::size_t len)
@@ -1023,8 +1044,16 @@ ts::optional<linemarker> parse_linemarker(position& p)
     p.skip();
 
     std::string file_name;
-    for (; !starts_with(p, "\""); p.skip())
-        file_name += *p.ptr();
+    for (; !starts_with(p, R"(")"); p.skip())
+    {
+        if (starts_with(p, R"(\\)"))
+        {
+            file_name += R"(\)";
+            p.skip();
+        }
+        else
+            file_name += *p.ptr();
+    }
     p.skip();
     result.file = std::move(file_name);
 
@@ -1067,6 +1096,13 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
 
     auto preprocessed = clang_preprocess(config, path, logger);
 
+    std::string xpath;
+    for (const char* cpath = path; *cpath; cpath++)
+        if (*cpath == '\\')
+            xpath += "\\\\";
+        else
+            xpath += *cpath;
+
     position p(ts::ref(result.source), preprocessed.file.c_str());
     ts::flag in_string(false), in_char(false), first_line(true);
     while (p)
@@ -1090,8 +1126,17 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
         }
         else if (in_string == false && starts_with(p, "'"))
         {
+            if (in_char == false && p.ptr() != preprocessed.file.c_str()
+                && std::isdigit(p.ptr()[-1]))
+            {
+                // It's a digit separator, not a char literal.
+            }
+            else
+            {
+                in_char.toggle();
+            }
+
             p.bump();
-            in_char.toggle();
         }
         else if (in_string == true || in_char == true)
             p.bump();
@@ -1174,11 +1219,8 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
             }
             else if (lm.value().flag == linemarker::enter_old)
             {
-                if (lm.value().file == path)
-                {
-                    p.enable_write();
-                    p.set_line(lm.value().line);
-                }
+                p.enable_write();
+                p.set_line(lm.value().line);
             }
             else if (lm.value().flag == linemarker::line_directive && p.write_enabled())
             {
@@ -1186,7 +1228,7 @@ detail::preprocessor_output detail::preprocess(const libclang_compile_config& co
                 {
                     // this is the first line marker
                     // just skip all builtin macro stuff until we reach the file again
-                    auto closing_line_marker = std::string("# 1 \"") + path + "\" 2\n";
+                    auto closing_line_marker = std::string("# 1 \"") + xpath + "\" 2\n";
 
                     auto ptr = std::strstr(p.ptr(), closing_line_marker.c_str());
                     DEBUG_ASSERT(ptr, detail::assert_handler{});

@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_friend.hpp>
 
@@ -46,7 +45,7 @@ std::unique_ptr<cpp_entity> detail::parse_cpp_friend(const detail::parse_context
                 auto name = detail::get_cursor_name(referenced);
                 type      = cpp_user_defined_type::build(
                     cpp_type_ref(detail::get_entity_id(referenced),
-                                 namespace_str + "::" + name.c_str()));
+                                      namespace_str + "::" + name.c_str()));
             }
             else
             {

@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_template_parameter.hpp>
 
@@ -16,6 +15,8 @@ const char* cppast::to_string(cpp_template_keyword kw) noexcept
         return "class";
     case cpp_template_keyword::keyword_typename:
         return "typename";
+    case cpp_template_keyword::concept_contraint:
+        return "concept constraint data lost";
     }
 
     return "should not get here";
@@ -23,10 +24,12 @@ const char* cppast::to_string(cpp_template_keyword kw) noexcept
 
 std::unique_ptr<cpp_template_type_parameter> cpp_template_type_parameter::build(
     const cpp_entity_index& idx, cpp_entity_id id, std::string name, cpp_template_keyword kw,
-    bool variadic, std::unique_ptr<cpp_type> default_type)
+    bool variadic, std::unique_ptr<cpp_type> default_type,
+    type_safe::optional<cpp_token_string> concept_constraint)
 {
     std::unique_ptr<cpp_template_type_parameter> result(
-        new cpp_template_type_parameter(std::move(name), kw, variadic, std::move(default_type)));
+        new cpp_template_type_parameter(std::move(name), kw, variadic, std::move(default_type),
+                                        std::move(concept_constraint)));
     idx.register_definition(std::move(id), type_safe::cref(*result));
     return result;
 }

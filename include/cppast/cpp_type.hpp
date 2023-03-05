@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_CPP_TYPE_HPP_INCLUDED
 #define CPPAST_CPP_TYPE_HPP_INCLUDED
@@ -45,7 +44,7 @@ enum class cpp_type_kind
 class cpp_type : detail::intrusive_list_node<cpp_type>
 {
 public:
-    cpp_type(const cpp_type&) = delete;
+    cpp_type(const cpp_type&)            = delete;
     cpp_type& operator=(const cpp_type&) = delete;
 
     virtual ~cpp_type() noexcept = default;
@@ -120,7 +119,7 @@ private:
 };
 
 /// The C++ builtin types.
-enum cpp_builtin_type_kind
+enum cpp_builtin_type_kind : int
 {
     cpp_void, //< `void`
 
@@ -246,9 +245,6 @@ private:
     }
 };
 
-class cpp_template_parameter_type;
-class cpp_template_instantiation_type;
-
 /// A [cppast::cpp_type]() that depends on another type.
 class cpp_dependent_type final : public cpp_type
 {
@@ -291,7 +287,7 @@ private:
 };
 
 /// The kinds of C++ cv qualifiers.
-enum cpp_cv
+enum cpp_cv : int
 {
     cpp_cv_none,
     cpp_cv_const,
@@ -387,7 +383,7 @@ private:
 };
 
 /// The kinds of C++ references.
-enum cpp_reference
+enum cpp_reference : int
 {
     cpp_ref_none,
     cpp_ref_lvalue,

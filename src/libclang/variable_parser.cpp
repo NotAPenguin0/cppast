@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include "parse_functions.hpp"
 
@@ -72,16 +71,20 @@ std::unique_ptr<cpp_entity> detail::parse_cpp_variable(const detail::parse_conte
     cpp_attribute_list attributes;
     auto               default_value = parse_default_value(attributes, context, cur, name.c_str());
 
+    auto parent = get_semantic_parent(cur, false);
+
     std::unique_ptr<cpp_variable> result;
     if (clang_isCursorDefinition(cur))
     {
-        result
-            = cpp_variable::build(*context.idx, get_entity_id(cur), name.c_str(), std::move(type),
-                                  std::move(default_value), storage_class, is_constexpr);
+        result = cpp_variable::build(*context.idx, get_entity_id(cur), name.c_str(),
+                                     std::move(type), std::move(default_value), storage_class,
+                                     is_constexpr, std::move(parent));
     }
     else
+    {
         result = cpp_variable::build_declaration(get_entity_id(cur), name.c_str(), std::move(type),
-                                                 storage_class, is_constexpr);
+                                                 storage_class, is_constexpr, std::move(parent));
+    }
     context.comments.match(*result, cur);
     result->add_attribute(attributes);
     return result;

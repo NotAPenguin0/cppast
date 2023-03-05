@@ -1,5 +1,5 @@
-# Copyright (C) 2017-2018 Jonathan Müller <jonathanmueller.dev@gmail.com>
-# This file is subject to the license terms in the LICENSE file
+# Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+# SPDX-License-Identifier: MIT
 # found in the top-level directory of this distribution.
 
 set(detail_header
@@ -13,6 +13,7 @@ set(header
     ../include/cppast/cpp_attribute.hpp
     ../include/cppast/cpp_class.hpp
     ../include/cppast/cpp_class_template.hpp
+    ../include/cppast/cpp_concept.hpp
     ../include/cppast/cpp_decltype_type.hpp
     ../include/cppast/cpp_entity.hpp
     ../include/cppast/cpp_entity_container.hpp
@@ -44,6 +45,7 @@ set(header
     ../include/cppast/cpp_variable_template.hpp
     ../include/cppast/diagnostic.hpp
     ../include/cppast/diagnostic_logger.hpp
+    ../include/cppast/cppast_fwd.hpp
     ../include/cppast/libclang_parser.hpp
     ../include/cppast/parser.hpp
     ../include/cppast/visitor.hpp)
@@ -53,6 +55,7 @@ set(source
         cpp_attribute.cpp
         cpp_class.cpp
         cpp_class_template.cpp
+        cpp_concept.cpp
         cpp_entity.cpp
         cpp_entity_index.cpp
         cpp_entity_kind.cpp
@@ -79,6 +82,7 @@ set(source
         visitor.cpp)
 set(libclang_source
         libclang/class_parser.cpp
+        libclang/concept_parser.cpp
         libclang/cxtokenizer.cpp
         libclang/cxtokenizer.hpp
         libclang/debug_helper.cpp
@@ -118,3 +122,6 @@ target_compile_options(cppast PRIVATE
                            # MSVC warnings
                            $<$<CXX_COMPILER_ID:MSVC>:
                            /W3>)
+
+install(TARGETS cppast)
+install(DIRECTORY ../include/ DESTINATION include)

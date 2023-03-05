@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_CODE_GENERATOR_HPP_INCLUDED
 #define CPPAST_CODE_GENERATOR_HPP_INCLUDED
@@ -15,8 +14,6 @@
 
 namespace cppast
 {
-enum cpp_access_specifier_kind : int;
-
 /// A simple string view implementation, like [std::string_view]().
 ///
 /// It "views" - stores a pointer to - some kind of string.
@@ -66,7 +63,7 @@ namespace detail
     {
     public:
         template <typename T>
-        explicit semantic_string_view(T&& obj, decltype(string_view(std::forward<T>(obj)), 0) = 0)
+        explicit semantic_string_view(T&& obj, decltype(string_view(std::declval<T>()), 0) = 0)
         : str_(std::forward<T>(obj))
         {}
 
@@ -520,12 +517,6 @@ private:
 ///
 /// \returns Whether or not any code was actually written.
 bool generate_code(code_generator& generator, const cpp_entity& e);
-
-/// \exclude
-class cpp_template_argument;
-
-/// \exclude
-class cpp_token_string;
 
 /// \exclude
 namespace detail

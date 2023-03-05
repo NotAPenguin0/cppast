@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include "parse_functions.hpp"
 
@@ -99,6 +98,27 @@ bool need_to_remove_scope(const CXCursor& cur, const CXType& type)
 
 std::string get_type_spelling(const CXCursor& cur, const CXType& type)
 {
+    // TODO: There are two interesting things we should keep track of here:
+    // * The canonical name of a type (easy, clang has a shortcut for that)
+    // * The type definition of this type, say for:
+    //   std::vector<int, default_alloator...> this should be the type (we
+    //   should ignore specialization here!) vector<T, S> whose parent is a
+    //   namespace in this case but could again be a concrete type as well (to
+    //   handle nested type specializations correctly.)
+    /*
+    auto ns_name = [](const CXCursor& cur) {
+      auto parent = clang_getCursorSemanticParent(cur);
+      if (clang_getCursorKind(parent) == CXCursor_TranslationUnit)
+        return "";
+      if (clang_getCursorKind(parent) == CXCursor_Namespace)
+        return spelling of cursor ...
+    };
+    */
+
+    // auto canonical =
+    // detail::cxstring(clang_getTypeSpelling(clang_getCanonicalType(type))).std_str(); auto
+    // declaration =
+    // detail::cxstring(clang_getCursorSpelling(clang_getTypeDeclaration(type))).std_str();
     auto spelling = detail::cxstring(clang_getTypeSpelling(type)).std_str();
     if (need_to_remove_scope(cur, type))
     {
@@ -251,16 +271,32 @@ std::unique_ptr<cpp_expression> parse_array_size(const CXCursor& cur, const CXTy
                  type, "unexpected token");
 
     std::string size_expr;
-    auto        bracket_count = 1;
-    for (auto ptr = spelling.c_str() + spelling.size() - 2u; bracket_count != 0; --ptr)
-    {
-        if (*ptr == ']')
-            ++bracket_count;
-        else if (*ptr == '[')
-            --bracket_count;
 
-        if (bracket_count != 0)
-            size_expr += *ptr;
+    auto ptr = spelling.rbegin();
+    while (true)
+    {
+        // Consume the final closing ].
+        ++ptr;
+
+        auto bracket_count = 1;
+        while (bracket_count != 0)
+        {
+            if (*ptr == ']')
+                ++bracket_count;
+            else if (*ptr == '[')
+                --bracket_count;
+
+            if (bracket_count != 0)
+                size_expr += *ptr;
+
+            ++ptr;
+        }
+
+        if (ptr == spelling.rend() || *ptr != ']')
+            // We don't have another ].
+            break;
+        // We do have another ], as we want the innermost, we need to restart.
+        size_expr.clear();
     }
 
     return size_expr.empty()
@@ -637,14 +673,24 @@ std::unique_ptr<cpp_type> parse_type_impl(const detail::parse_context& context, 
     case CXType_Typedef:
         return make_leave_type(cur, type, [&](std::string&& spelling) {
             auto decl = clang_getTypeDeclaration(type);
-            if (detail::cxstring(clang_getCursorSpelling(decl)).empty())
-                spelling = ""; // anonymous type
-            return cpp_user_defined_type::build(
-                cpp_type_ref(detail::get_entity_id(decl), std::move(spelling)));
+            if (clang_isInvalid(clang_getCursorKind(decl)))
+            {
+                // We can reach this point if we have an elaborated type referencing a using
+                // declaration. Give it an invalid id, since we have no way of retrieving it, but
+                // keep the spelling.
+                return cpp_user_defined_type::build(
+                    cpp_type_ref(cpp_entity_id(""), std::move(spelling)));
+            }
+            else
+            {
+                if (detail::cxstring(clang_getCursorSpelling(decl)).empty())
+                    spelling = ""; // anonymous type
+                return cpp_user_defined_type::build(
+                    cpp_type_ref(detail::get_entity_id(decl), std::move(spelling)));
+            }
         });
 
-    case CXType_Pointer:
-    {
+    case CXType_Pointer: {
         auto pointee = parse_type_impl(context, cur, clang_getPointeeType(type));
         auto pointer = cpp_pointer_type::build(std::move(pointee));
 
@@ -653,8 +699,7 @@ std::unique_ptr<cpp_type> parse_type_impl(const detail::parse_context& context, 
         return make_cv_qualified(std::move(pointer), cv);
     }
     case CXType_LValueReference:
-    case CXType_RValueReference:
-    {
+    case CXType_RValueReference: {
         auto referee = parse_type_impl(context, cur, clang_getPointeeType(type));
         return cpp_reference_type::build(std::move(referee), get_reference_kind(type));
     }
@@ -690,7 +735,7 @@ std::unique_ptr<cpp_type> detail::parse_raw_type(const detail::parse_context&,
                                                  detail::cxtoken_stream&  stream,
                                                  detail::cxtoken_iterator end)
 {
-    auto result = detail::to_string(stream, end);
+    auto result = detail::to_string(stream, end, false);
     return cpp_unexposed_type::build(result.as_string());
 }
 

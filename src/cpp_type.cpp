@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_type.hpp>
 
@@ -149,6 +148,7 @@ bool detail::cpp_type_ref_predicate::operator()(const cpp_entity& e)
     case cpp_entity_kind::function_template_specialization_t:
     case cpp_entity_kind::class_template_t:
     case cpp_entity_kind::class_template_specialization_t:
+    case cpp_entity_kind::concept_t:
     case cpp_entity_kind::static_assert_t:
     case cpp_entity_kind::unexposed_t:
     case cpp_entity_kind::count:
@@ -491,7 +491,9 @@ void write_template_instantiation(code_generator::output&                output,
 
 void write_dependent(code_generator::output& output, const cpp_dependent_type& type)
 {
-    output << token_seq(type.name());
+    output << keyword("typename") << whitespace;
+    detail::write_type(output, type.dependee(), "");
+    output << punctuation("::") << identifier(type.name());
 }
 
 void write_unexposed(code_generator::output& output, const cpp_unexposed_type& type)

@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/parser.hpp>
 
@@ -27,6 +26,11 @@ TEST_CASE("parse_files")
         const char* do_get_name() const noexcept override
         {
             return "null";
+        }
+
+        bool do_use_c() const noexcept override
+        {
+            return false;
         }
     } config;
 

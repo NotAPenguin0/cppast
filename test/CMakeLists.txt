@@ -1,11 +1,11 @@
-# Copyright (C) 2017-2018 Jonathan Müller <jonathanmueller.dev@gmail.com>
-# This file is subject to the license terms in the LICENSE file
+# Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+# SPDX-License-Identifier: MIT
 # found in the top-level directory of this distribution.
 
 # Fetch catch.
 message(STATUS "Fetching catch")
 include(FetchContent)
-FetchContent_Declare(catch URL https://github.com/catchorg/Catch2/archive/v2.13.4.zip)
+FetchContent_Declare(catch URL https://github.com/catchorg/Catch2/archive/refs/tags/v2.13.9.zip)
 FetchContent_MakeAvailable(catch)
 
 set(tests
@@ -14,6 +14,7 @@ set(tests
         cpp_attribute.cpp
         cpp_class.cpp
         cpp_class_template.cpp
+        cpp_concept.cpp
         cpp_enum.cpp
         cpp_friend.cpp
         cpp_function.cpp

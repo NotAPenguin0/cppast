@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_entity_kind.hpp>
 
@@ -89,6 +88,8 @@ const char* cppast::to_string(cpp_entity_kind kind) noexcept
         return "class template";
     case cpp_entity_kind::class_template_specialization_t:
         return "class template specialization";
+    case cpp_entity_kind::concept_t:
+        return "concept";
 
     case cpp_entity_kind::static_assert_t:
         return "static_assert";
@@ -143,6 +144,7 @@ bool cppast::is_function(cpp_entity_kind kind) noexcept
     case cpp_entity_kind::function_template_specialization_t:
     case cpp_entity_kind::class_template_t:
     case cpp_entity_kind::class_template_specialization_t:
+    case cpp_entity_kind::concept_t:
     case cpp_entity_kind::static_assert_t:
     case cpp_entity_kind::unexposed_t:
     case cpp_entity_kind::count:
@@ -192,6 +194,7 @@ bool cppast::is_parameter(cpp_entity_kind kind) noexcept
     case cpp_entity_kind::function_template_specialization_t:
     case cpp_entity_kind::class_template_t:
     case cpp_entity_kind::class_template_specialization_t:
+    case cpp_entity_kind::concept_t:
     case cpp_entity_kind::static_assert_t:
     case cpp_entity_kind::unexposed_t:
     case cpp_entity_kind::count:
@@ -210,6 +213,7 @@ bool cppast::is_template(cpp_entity_kind kind) noexcept
     case cpp_entity_kind::function_template_specialization_t:
     case cpp_entity_kind::class_template_t:
     case cpp_entity_kind::class_template_specialization_t:
+    case cpp_entity_kind::concept_t:
         return true;
 
     case cpp_entity_kind::file_t:
@@ -289,6 +293,7 @@ bool cppast::is_template_specialization(cpp_entity_kind kind) noexcept
     case cpp_entity_kind::variable_template_t:
     case cpp_entity_kind::function_template_t:
     case cpp_entity_kind::class_template_t:
+    case cpp_entity_kind::concept_t:
     case cpp_entity_kind::static_assert_t:
     case cpp_entity_kind::unexposed_t:
     case cpp_entity_kind::count:

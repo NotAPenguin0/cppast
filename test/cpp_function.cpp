@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #include <cppast/cpp_function.hpp>
 
@@ -104,15 +103,15 @@ void n(int i = int());
                     else if (param.name() == "b")
                     {
                         REQUIRE(equal_types(idx, param.type(),
-                                            *cpp_pointer_type::build(
+                                                        *cpp_pointer_type::build(
                                                 cpp_builtin_type::build(cpp_float))));
                         REQUIRE(param.default_value());
                         REQUIRE(
                             equal_expressions(param.default_value().value(),
-                                              *cpp_unexposed_expression::
-                                                  build(cpp_pointer_type::build(
+                                                          *cpp_unexposed_expression::
+                                                              build(cpp_pointer_type::build(
                                                             cpp_builtin_type::build(cpp_float)),
-                                                        cpp_token_string::tokenize("nullptr"))));
+                                                                    cpp_token_string::tokenize("nullptr"))));
                     }
                     else
                         REQUIRE(false);
@@ -125,13 +124,13 @@ void n(int i = int());
             {
                 REQUIRE(
                     equal_types(idx, func.return_type(),
-                                *cpp_reference_type::
-                                    build(cpp_array_type::build(cpp_builtin_type::build(cpp_int),
-                                                                cpp_literal_expression::
-                                                                    build(cpp_builtin_type::build(
+                                            *cpp_reference_type::
+                                                build(cpp_array_type::build(cpp_builtin_type::build(cpp_int),
+                                                                            cpp_literal_expression::
+                                                                                build(cpp_builtin_type::build(
                                                                               cpp_ulonglong),
-                                                                          "10")),
-                                          cpp_ref_lvalue)));
+                                                                                      "10")),
+                                                      cpp_ref_lvalue)));
                 REQUIRE(func.signature() == "(decltype(42),...)");
 
                 auto count = 0u;
@@ -140,10 +139,10 @@ void n(int i = int());
                     if (param.name() == "a")
                     {
                         REQUIRE(equal_types(idx, param.type(),
-                                            *cpp_decltype_type::build(
+                                                        *cpp_decltype_type::build(
                                                 cpp_unexposed_expression::
                                                     build(cpp_builtin_type::build(cpp_int),
-                                                          cpp_token_string::tokenize("42")))));
+                                                                      cpp_token_string::tokenize("42")))));
                         REQUIRE(!param.default_value());
                     }
                     else
@@ -166,10 +165,10 @@ void n(int i = int());
                         REQUIRE(equal_types(idx, param.type(), *cpp_builtin_type::build(cpp_int)));
                         REQUIRE(param.default_value());
                         REQUIRE(equal_expressions(param.default_value().value(),
-                                                  *cpp_unexposed_expression::
-                                                      build(cpp_pointer_type::build(
+                                                              *cpp_unexposed_expression::
+                                                                  build(cpp_pointer_type::build(
                                                                 cpp_builtin_type::build(cpp_int)),
-                                                            cpp_token_string::tokenize("int()"))));
+                                                                        cpp_token_string::tokenize("int()"))));
                     }
                     else
                         REQUIRE(false);
@@ -193,18 +192,18 @@ void n(int i = int());
             if (func.name() == "d")
                 REQUIRE(
                     equal_expressions(func.noexcept_condition().value(),
-                                      *cpp_literal_expression::build(std::move(bool_t), "true")));
+                                                  *cpp_literal_expression::build(std::move(bool_t), "true")));
             else if (func.name() == "e")
                 REQUIRE(
                     equal_expressions(func.noexcept_condition().value(),
-                                      *cpp_unexposed_expression::build(std::move(bool_t),
-                                                                       cpp_token_string::tokenize(
+                                                  *cpp_unexposed_expression::build(std::move(bool_t),
+                                                                                   cpp_token_string::tokenize(
                                                                            "false"))));
             else if (func.name() == "f")
                 REQUIRE(
                     equal_expressions(func.noexcept_condition().value(),
-                                      *cpp_unexposed_expression::build(std::move(bool_t),
-                                                                       cpp_token_string::tokenize(
+                                                  *cpp_unexposed_expression::build(std::move(bool_t),
+                                                                                   cpp_token_string::tokenize(
                                                                            "noexcept(d())"))));
         }
         else if (func.name() == "g" || func.name() == "h" || func.name() == "i"
@@ -259,7 +258,7 @@ void n(int i = int());
         else if (func.name() == "m")
         {
             REQUIRE(equal_types(idx, func.return_type(),
-                                *cpp_user_defined_type::build(
+                                            *cpp_user_defined_type::build(
                                     cpp_type_ref(cpp_entity_id(""), "ns::m"))));
             REQUIRE(count_children(func.parameters()) == 0u);
             REQUIRE(!func.is_variadic());
@@ -363,8 +362,8 @@ void foo::a() {}
             REQUIRE(func.noexcept_condition());
             REQUIRE(
                 equal_expressions(func.noexcept_condition().value(),
-                                  *cpp_literal_expression::build(cpp_builtin_type::build(cpp_bool),
-                                                                 "true")));
+                                              *cpp_literal_expression::build(cpp_builtin_type::build(cpp_bool),
+                                                                             "true")));
             REQUIRE(!func.is_constexpr());
             REQUIRE(func.body_kind() == cpp_function_definition);
         }

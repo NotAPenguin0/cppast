@@ -1,6 +1,5 @@
-// Copyright (C) 2017-2019 Jonathan Müller <jonathanmueller.dev@gmail.com>
-// This file is subject to the license terms in the LICENSE file
-// found in the top-level directory of this distribution.
+// Copyright (C) 2017-2023 Jonathan Müller and cppast contributors
+// SPDX-License-Identifier: MIT
 
 #ifndef CPPAST_CPP_VARIABLE_HPP_INCLUDED
 #define CPPAST_CPP_VARIABLE_HPP_INCLUDED
@@ -28,16 +27,16 @@ public:
     static std::unique_ptr<cpp_variable> build(const cpp_entity_index& idx, cpp_entity_id id,
                                                std::string name, std::unique_ptr<cpp_type> type,
                                                std::unique_ptr<cpp_expression> def,
-                                               cpp_storage_class_specifiers    spec,
-                                               bool                            is_constexpr);
+                                               cpp_storage_class_specifiers spec, bool is_constexpr,
+                                               type_safe::optional<cpp_entity_ref> semantic_parent
+                                               = {});
 
     /// \returns A newly created variable that is a declaration.
     /// A declaration will not be registered and it does not have the default value.
-    static std::unique_ptr<cpp_variable> build_declaration(cpp_entity_id             definition_id,
-                                                           std::string               name,
-                                                           std::unique_ptr<cpp_type> type,
-                                                           cpp_storage_class_specifiers spec,
-                                                           bool is_constexpr);
+    static std::unique_ptr<cpp_variable> build_declaration(
+        cpp_entity_id definition_id, std::string name, std::unique_ptr<cpp_type> type,
+        cpp_storage_class_specifiers spec, bool is_constexpr,
+        type_safe::optional<cpp_entity_ref> semantic_parent = {});
 
     /// \returns The [cppast::cpp_storage_specifiers]() on that variable.
     cpp_storage_class_specifiers storage_class() const noexcept
